@@ -71,8 +71,8 @@ async def upload_csv(file: UploadFile = File(...)):
 @app.post("/demo/")
 async def load_demo():
     try:
-        df = pd.read_csv("data/samples/1_marketing_campaign.csv")
-        dataset_id = "demo_marketing_campaign"
+        df = pd.read_csv("data/samples/2_healthcare_treatment.csv")
+        dataset_id = "demo_healthcare_treatment"
         DATASETS[dataset_id] = df
         
         columns_info = []
@@ -83,13 +83,13 @@ async def load_demo():
 
         return {
             "dataset_id": dataset_id,
-            "filename": "1_marketing_campaign.csv", 
+            "filename": "2_healthcare_treatment.csv", 
             "columns": columns_info, 
             "rows": len(df),
             "defaults": {
-                "treatment": "promo_email",
-                "outcome": "sales",
-                "covariates": ["age", "income", "past_purchases"]
+                "treatment": "treatment",
+                "outcome": "post_income",
+                "covariates": ["prior_income", "age", "years_education"]
             }
         }
     except Exception as e:
