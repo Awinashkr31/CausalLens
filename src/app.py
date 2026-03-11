@@ -85,7 +85,12 @@ async def load_demo():
             "dataset_id": dataset_id,
             "filename": "1_marketing_campaign.csv", 
             "columns": columns_info, 
-            "rows": len(df)
+            "rows": len(df),
+            "defaults": {
+                "treatment": "promo_email",
+                "outcome": "sales",
+                "covariates": ["age", "income", "past_purchases"]
+            }
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

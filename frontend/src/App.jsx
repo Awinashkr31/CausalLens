@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
-import { UploadCloud, Activity, Database, Settings2, BarChart2, AlertCircle, CheckCircle } from 'lucide-react';
+import { UploadCloud, Activity, Database, Settings2, BarChart2, AlertCircle, CheckCircle, ActivitySquare } from 'lucide-react';
 import LandingPage from './LandingPage';
 
 const API_BASE = 'http://127.0.0.1:8000';
@@ -55,6 +55,17 @@ function App() {
       setDatasetId(res.data.dataset_id);
       setColumns(res.data.columns);
       setRowCount(res.data.rows);
+      
+      // Auto-select variables if defaults exist
+      if (res.data.defaults) {
+        setConfig(prev => ({
+          ...prev,
+          treatment: res.data.defaults.treatment,
+          outcome: res.data.defaults.outcome,
+          covariates: res.data.defaults.covariates
+        }));
+      }
+
       setActiveTab('config');
       setCurrentView('app');
     } catch (err) {
@@ -66,8 +77,20 @@ function App() {
   };
 
   const handleRunAnalysis = async () => {
-    if (!config.treatment || !config.outcome) {
-      setError("Please select treatment and outcome variables.");
+    if (!config.treatment) {
+      setError("Please select a Treatment Variable (The Cause).");
+      return;
+    }
+    if (!config.outcome) {
+      setError("Please select an Outcome Variable (The Effect).");
+      return;
+    }
+    if (config.covariates.length === 0) {
+      setError("Please select at least one Confounding Variable (Control) to ensure a fair comparison.");
+      return;
+    }
+    if (config.methods.length === 0) {
+      setError("Please select at least one Statistical Method to run.");
       return;
     }
 
@@ -307,6 +330,43 @@ function App() {
             <h1>Step 3: Results</h1>
             <p className="mb-6">The calculated Average Treatment Effect (ATE) represents the estimated causal impact.</p>
 
+            {/* --- Key Takeaway / Plain English Translation --- */}
+            {(() => {
+              const validResults = results.results.filter(r => r.ate !== null && !isNaN(r.ate));
+              if (validResults.length === 0) return null;
+              
+              const avgAte = validResults.reduce((sum, r) => sum + r.ate, 0) / validResults.length;
+              const isPositive = avgAte > 0;
+              const isSignificant = validResults.some(r => r.p_value !== null && r.p_value < 0.05);
+              const magnitude = Math.abs(avgAte).toFixed(2);
+              
+              let conclusion = "";
+              if (isPositive) {
+                conclusion = `On average across all statistical models, applying "${config.treatment}" causes "${config.outcome}" to INCREASE by approximately ${magnitude} units.`;
+              } else if (avgAte < 0) {
+                conclusion = `On average across all statistical models, applying "${config.treatment}" causes "${config.outcome}" to DECREASE by approximately ${magnitude} units.`;
+              } else {
+                conclusion = `On average, applying "${config.treatment}" has exactly ZERO causal impact on "${config.outcome}".`;
+              }
+
+              return (
+                <div className="simple-card mb-6" style={{ background: '#f8fafc', border: '2px solid #e2e8f0', borderLeft: isPositive ? '6px solid var(--success-color)' : '6px solid var(--danger-color)' }}>
+                  <h3 style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <ActivitySquare size={24} color={isPositive ? "var(--success-color)" : "var(--danger-color)"} /> 
+                    Key Takeaway
+                  </h3>
+                  <p style={{ fontSize: '1.25rem', fontWeight: 500, color: '#1e293b', marginBottom: '8px' }}>
+                    {conclusion}
+                  </p>
+                  <p style={{ fontSize: '1rem', color: '#64748b', margin: 0 }}>
+                    {isSignificant 
+                      ? "The data shows strong statistical significance (P-Value < 0.05), meaning you can be highly confident this effect is real and not just a coincidence."
+                      : "We recommend reviewing the Confidence Intervals below; some models did not find strong statistical significance, meaning the true effect might vary."}
+                  </p>
+                </div>
+              );
+            })()}
+
             <div className="simple-card mb-6">
               <div className="flex items-center justify-between mb-4">
                 <h3>Treatment Effect Table</h3>
@@ -384,6 +444,35 @@ function App() {
                 </div>
               </div>
             </div>
+
+            {/* --- Diagnostic Summary / Plain English Translation --- */}
+            {(() => {
+              const balances = results.diagnostics.balance;
+              if (!balances || balances.length === 0) return null;
+              
+              const totalCovs = balances.length;
+              const imbalancedCovs = balances.filter(b => b.SMD > 0.1);
+              const isBalanced = imbalancedCovs.length === 0;
+
+              return (
+                <div className="simple-card mb-6" style={{ background: '#f8fafc', border: '1px solid #e2e8f0', marginTop: '24px' }}>
+                  <h3 style={{ marginBottom: '8px', color: '#334155' }}>Diagnostic Conclusion</h3>
+                  {isBalanced ? (
+                    <p style={{ margin: 0, color: '#065f46' }}>
+                      <strong>Excellent Data Quality:</strong> Your Treated and Control groups are beautifully balanced across all <strong>{totalCovs}</strong> confounding variables. 
+                      Because there are no major differences between the two groups (no Standardized Mean Differences over 0.1), you can be highly confident that the calculated causal impact is accurate and not biased by underlying differences in the populations.
+                    </p>
+                  ) : (
+                     <p style={{ margin: 0, color: '#991b1b' }}>
+                      <strong>Warning - Potential Bias:</strong> We found that <strong>{imbalancedCovs.length}</strong> out of {totalCovs} confounding variables are <strong>not balanced</strong> between your Treated and Control groups ({imbalancedCovs.map(c => c.Covariate).join(', ')}). 
+                      <br/><br/>
+                      Because the populations differ significantly on these metrics, the pure Average Treatment Effect might be slightly biased. Our advanced models (like Propensity Score Matching) attempt to adjust for this mathematically, but you should interpret the final causal impact with some caution.
+                    </p>
+                  )}
+                </div>
+              );
+            })()}
+
           </div>
         )}
 
