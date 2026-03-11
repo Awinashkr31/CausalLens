@@ -68,6 +68,28 @@ async def upload_csv(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+@app.post("/demo/")
+async def load_demo():
+    try:
+        df = pd.read_csv("data/samples/1_marketing_campaign.csv")
+        dataset_id = "demo_marketing_campaign"
+        DATASETS[dataset_id] = df
+        
+        columns_info = []
+        for col in df.columns:
+            dtype = str(df[col].dtype)
+            col_type = "numeric" if "int" in dtype or "float" in dtype else "categorical"
+            columns_info.append({"name": col, "type": col_type})
+
+        return {
+            "dataset_id": dataset_id,
+            "filename": "1_marketing_campaign.csv", 
+            "columns": columns_info, 
+            "rows": len(df)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
 @app.post("/analyze/")
 async def run_analysis(request: AnalysisRequest):
     if request.dataset_id not in DATASETS:

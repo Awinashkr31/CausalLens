@@ -1,7 +1,7 @@
 import { Activity, ArrowRight, BookOpen, Target, CheckCircle, Shield, Briefcase, Heart, ActivitySquare, Database, Maximize } from 'lucide-react';
 /* eslint-disable react/prop-types */
 
-export default function LandingPage({ onLaunch }) {
+export default function LandingPage({ onLaunch, onDemo }) {
   return (
     <div className="landing-container">
       {/* Navbar */}
@@ -31,7 +31,7 @@ export default function LandingPage({ onLaunch }) {
             <button className="btn-primary" style={{ padding: '16px 32px', fontSize: '1.1rem' }} onClick={onLaunch}>
               Start Analysis <ArrowRight size={20} />
             </button>
-            <button className="btn-secondary" style={{ padding: '16px 32px', fontSize: '1.1rem' }} onClick={onLaunch}>
+            <button className="btn-secondary" style={{ padding: '16px 32px', fontSize: '1.1rem' }} onClick={onDemo}>
               View Demo Data
             </button>
           </div>

@@ -47,6 +47,24 @@ function App() {
     }
   };
 
+  const handleLoadDemo = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await axios.post(`${API_BASE}/demo/`);
+      setDatasetId(res.data.dataset_id);
+      setColumns(res.data.columns);
+      setRowCount(res.data.rows);
+      setActiveTab('config');
+      setCurrentView('app');
+    } catch (err) {
+      setError(err.response?.data?.detail || "Demo load failed");
+      setCurrentView('app');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleRunAnalysis = async () => {
     if (!config.treatment || !config.outcome) {
       setError("Please select treatment and outcome variables.");
@@ -92,7 +110,7 @@ function App() {
   };
 
   if (currentView === 'landing') {
-    return <LandingPage onLaunch={() => setCurrentView('app')} />;
+    return <LandingPage onLaunch={() => setCurrentView('app')} onDemo={handleLoadDemo} />;
   }
 
   return (
