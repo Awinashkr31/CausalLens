@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import axios from 'axios';
-import { UploadCloud, Activity, Database, Settings2, BarChart2, AlertCircle, CheckCircle, Info } from 'lucide-react';
+import { UploadCloud, Activity, Database, Settings2, BarChart2, AlertCircle, CheckCircle } from 'lucide-react';
+import LandingPage from './LandingPage';
 
 const API_BASE = 'http://127.0.0.1:8000';
 
 function App() {
-  const [activeTab, setActiveTab] = useState('about');
+  const [currentView, setCurrentView] = useState('landing');
+  const [activeTab, setActiveTab] = useState('upload');
   const [datasetId, setDatasetId] = useState(null);
   const [columns, setColumns] = useState([]);
   const [rowCount, setRowCount] = useState(0);
@@ -89,6 +91,10 @@ function App() {
     });
   };
 
+  if (currentView === 'landing') {
+    return <LandingPage onLaunch={() => setCurrentView('app')} />;
+  }
+
   return (
     <div className="app-container">
       {/* Sidebar */}
@@ -101,12 +107,6 @@ function App() {
         <p className="mb-6" style={{fontSize: '0.9rem'}}>An easy-to-use platform for measuring impact and causal inference.</p>
 
         <div className="flex-col gap-2">
-          <button 
-            className={`btn-secondary flex items-center gap-2 ${activeTab === 'about' ? 'active' : ''}`}
-            onClick={() => setActiveTab('about')}
-          >
-            <Info size={18} /> Methodology
-          </button>
           <button 
             className={`btn-secondary flex items-center gap-2 ${activeTab === 'upload' ? 'active' : ''}`}
             onClick={() => setActiveTab('upload')}
@@ -139,68 +139,6 @@ function App() {
               <AlertCircle size={20} />
               <strong>Error:</strong> {error}
             </div>
-          </div>
-        )}
-
-        {/* --- ABOUT TAB --- */}
-        {activeTab === 'about' && (
-          <div className="animate-fade-in">
-            <h1>About CausalLens</h1>
-            <p className="mb-6" style={{fontSize: '1.1rem'}}>
-              CausalLens is a causal inference platform designed to help researchers, analysts, and decision-makers measure the true impact of interventions while accounting for confounding variables.
-            </p>
-            
-            <div className="simple-card mb-6">
-              <h3>What We Do</h3>
-              <p>
-                Whether you&apos;re measuring marketing campaign effectiveness, healthcare treatment outcomes, or policy impacts, our platform provides rigorous statistical methods in an accessible interface.
-              </p>
-            </div>
-
-            <h2 className="mt-6 mb-4">Statistical Methods</h2>
-            <div className="grid-3 mb-6">
-              <div className="simple-card">
-                <h4 style={{color: '#2563eb', marginBottom: '8px'}}>Difference-in-Differences</h4>
-                <p style={{fontSize: '0.9rem'}}>
-                  Compares changes in outcomes over time between a treated group and a control group. Controls for common trends.
-                </p>
-                <div className="badge badge-numerical mt-2">Best for: Time-series data</div>
-              </div>
-
-              <div className="simple-card">
-                <h4 style={{color: '#059669', marginBottom: '8px'}}>Synthetic Control</h4>
-                <p style={{fontSize: '0.9rem'}}>
-                  Creates a synthetic counterfactual to answer: &quot;What would have happened without the intervention?&quot;
-                </p>
-                <div className="badge badge-categorical mt-2">Best for: Single treated unit</div>
-              </div>
-
-              <div className="simple-card">
-                <h4 style={{color: '#dc2626', marginBottom: '8px'}}>Regression Controls</h4>
-                <p style={{fontSize: '0.9rem'}}>
-                  Standard OLS regression controlling for observed confounders. Isolates treatment effects using covariates.
-                </p>
-                <div className="badge mt-2" style={{background: '#fee2e2', color: '#b91c1c', border: '1px solid #fecaca'}}>Best for: Cross-sectional data</div>
-              </div>
-            </div>
-
-            <div className="simple-card mb-6" style={{borderLeft: '4px solid #8b5cf6', backgroundColor: '#f5f3ff'}}>
-              <h3>Understanding Confounding Variables</h3>
-              <p>
-                A confounding variable influences both the treatment and the outcome, creating false associations. For example:
-              </p>
-              <ul style={{marginLeft: '24px', marginBottom: '16px', color: 'var(--text-secondary)'}}>
-                <li style={{marginBottom: '8px'}}>Age affecting both treatment choice and recovery time.</li>
-                <li style={{marginBottom: '8px'}}>Seasonal trends coinciding with marketing promos.</li>
-              </ul>
-              <p>
-                Our platform automatically adjusts for these confounders using techniques like Propensity Score Matching.
-              </p>
-            </div>
-
-            <button className="btn-primary mt-4" onClick={() => setActiveTab('upload')}>
-              Start Step 1: Upload Data →
-            </button>
           </div>
         )}
 
