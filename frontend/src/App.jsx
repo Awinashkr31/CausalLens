@@ -3,7 +3,9 @@ import axios from 'axios';
 import { UploadCloud, Activity, Database, Settings2, BarChart2, AlertCircle, CheckCircle, ActivitySquare, Menu, X } from 'lucide-react';
 import LandingPage from './LandingPage';
 
-const API_BASE = 'http://127.0.0.1:8000';
+// In production, frontend is served by FastAPI on the same origin.
+// In development, use Vite proxy (configured in vite.config.js).
+const API_BASE = '';
 
 function App() {
   const [currentView, setCurrentView] = useState('landing');

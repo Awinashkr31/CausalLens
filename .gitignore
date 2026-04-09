@@ -10,6 +10,13 @@ __pycache__/
 *$py.class
 *.so
 
+# Node
+node_modules/
+frontend/dist/
+
+# Data (user uploads)
+data/uploads/
+
 # Jupyter
 .ipynb_checkpoints/
 
